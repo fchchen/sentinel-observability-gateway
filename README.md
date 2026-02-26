@@ -2,6 +2,8 @@
 
 **Event-driven ingress for service/domain events with idempotent processing, real-time Angular dashboards, and SLO-backed observability (OpenTelemetry + Grafana).**
 
+Co-created by **fchchen** and **OpenAI Codex**.
+
 ## Why this exists
 Enterprises don’t lack events—they lack a **reliable, observable control point**. This gateway standardizes event ingestion, protects downstream systems with **idempotency + DLQ**, and ships with **production-grade telemetry** plus **SLOs + burn-rate alerts**.
 
@@ -11,6 +13,31 @@ Enterprises don’t lack events—they lack a **reliable, observable control poi
 - Production operations: traces, metrics, dashboards, runbooks
 - Reliability: SLOs, error budgets, burn-rate alerts
 - Full-stack ownership: .NET + Kafka + Postgres + Angular + local infra
+
+## Screenshots (current build)
+The screenshots below were captured from a live local run with seeded traffic.
+
+### Query/API snapshots
+Pipeline health:
+
+![Pipeline health endpoint](docs/screenshots/01-pipeline-health.png)
+
+Recent persisted events:
+
+![Recent events endpoint](docs/screenshots/02-recent-events.png)
+
+Gateway metrics endpoint:
+
+![Gateway metrics endpoint](docs/screenshots/04-gateway-metrics.png)
+
+### Observability snapshots
+Prometheus gateway request-rate query:
+
+![Prometheus gateway request rate](docs/screenshots/03-prometheus-gateway-rate.png)
+
+Grafana Sentinel Pipeline + SLO dashboard:
+
+![Grafana Sentinel Pipeline and SLO dashboard](docs/screenshots/05-grafana-dashboard.png)
 
 ## Quick start
 1. Start infrastructure:
@@ -26,8 +53,11 @@ Enterprises don’t lack events—they lack a **reliable, observable control poi
    - `cd src/web-ui && npm install && npm start`
 5. Open:
    - Angular: http://localhost:4200
-   - Prometheus: http://localhost:9090
-   - Grafana: http://localhost:3000
+   - Gateway API: http://localhost:8080
+   - Query API: http://localhost:8081
+   - Realtime hub: http://localhost:8082
+   - Prometheus: http://localhost:19090
+   - Grafana: http://localhost:13000
 
 Grafana default credentials: `admin` / `admin`
 
