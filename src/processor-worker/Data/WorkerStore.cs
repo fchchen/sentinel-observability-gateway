@@ -10,7 +10,7 @@ public enum PersistResult
     Duplicate
 }
 
-public sealed class WorkerStore(IConfiguration configuration)
+public sealed class WorkerStore(IConfiguration configuration, ILogger<WorkerStore> logger)
 {
     private readonly string _connectionString = configuration.GetConnectionString("Postgres")
         ?? throw new InvalidOperationException("Missing connection string: ConnectionStrings:Postgres");
@@ -174,8 +174,9 @@ public sealed class WorkerStore(IConfiguration configuration)
             await command.ExecuteNonQueryAsync(cancellationToken);
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to write dead-letter record for tenant {TenantId}", tenantId);
             return false;
         }
     }
@@ -195,9 +196,9 @@ public sealed class WorkerStore(IConfiguration configuration)
                 return snapshot;
             }
         }
-        catch
+        catch (System.Text.Json.JsonException)
         {
-            // ignored, snapshot will be wrapped
+            // Not valid JSON — will be wrapped below
         }
 
         return System.Text.Json.JsonSerializer.Serialize(new { raw = snapshot });

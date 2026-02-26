@@ -30,7 +30,16 @@ var host = builder.Build();
 using (var scope = host.Services.CreateScope())
 {
     var store = scope.ServiceProvider.GetRequiredService<WorkerStore>();
-    await store.EnsureSchemaAsync(CancellationToken.None);
+    var initLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        await store.EnsureSchemaAsync(CancellationToken.None);
+    }
+    catch (Exception ex)
+    {
+        initLogger.LogCritical(ex, "Failed to initialize database schema — aborting startup");
+        throw;
+    }
 }
 
 await host.RunAsync();

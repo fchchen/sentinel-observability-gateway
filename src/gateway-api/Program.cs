@@ -13,6 +13,7 @@ using OpenTelemetry.Context.Propagation;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace Gateway.Api;
@@ -67,7 +68,16 @@ public class Program
         using (var scope = app.Services.CreateScope())
         {
             var store = scope.ServiceProvider.GetRequiredService<IdempotencyStore>();
-            await store.EnsureSchemaAsync(CancellationToken.None);
+            var initLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            try
+            {
+                await store.EnsureSchemaAsync(CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                initLogger.LogCritical(ex, "Failed to initialize database schema — aborting startup");
+                throw;
+            }
         }
 
         app.MapGet("/", () => Results.Ok(new { service = "gateway-api", status = "ok" }));
@@ -110,6 +120,15 @@ public class Program
             {
                 return Complete(
                     Results.BadRequest(new { error = "eventId, tenantId, source, type, and streamKey are required" }),
+                    StatusCodes.Status400BadRequest);
+            }
+
+            if (envelope.EventId.Length > 128 || envelope.TenantId.Length > 128 ||
+                envelope.Source.Length > 256 || envelope.Type.Length > 256 ||
+                envelope.StreamKey.Length > 256)
+            {
+                return Complete(
+                    Results.BadRequest(new { error = "One or more fields exceed maximum allowed length" }),
                     StatusCodes.Status400BadRequest);
             }
 
@@ -187,7 +206,7 @@ public class Program
             return Complete(
                 Results.Accepted(value: new EventAcceptedResponse(envelope.EventId, receivedAtUtc, traceId, Duplicate: false)),
                 StatusCodes.Status202Accepted);
-        });
+        }).WithMetadata(new RequestSizeLimitAttribute(256 * 1024)); // 256 KB, route-specific
 
         await app.RunAsync();
     }

@@ -49,6 +49,9 @@ public class Worker(
         consumer.Subscribe(options.KafkaTopic);
         logger.LogInformation("Worker subscribed to {Topic} as group {GroupId}", options.KafkaTopic, options.KafkaGroupId);
 
+        var consumeBackoff = TimeSpan.FromSeconds(1);
+        var maxBackoff = TimeSpan.FromSeconds(30);
+
         while (!stoppingToken.IsCancellationRequested)
         {
             ConsumeResult<string, string>? result;
@@ -58,7 +61,9 @@ public class Worker(
             }
             catch (ConsumeException ex)
             {
-                logger.LogError(ex, "Kafka consume error");
+                logger.LogError(ex, "Kafka consume error, backing off for {BackoffSeconds}s", consumeBackoff.TotalSeconds);
+                try { await Task.Delay(consumeBackoff, stoppingToken); } catch (OperationCanceledException) { break; }
+                consumeBackoff = TimeSpan.FromTicks(Math.Min(consumeBackoff.Ticks * 2, maxBackoff.Ticks));
                 continue;
             }
             catch (OperationCanceledException)
@@ -70,6 +75,8 @@ public class Worker(
             {
                 continue;
             }
+
+            consumeBackoff = TimeSpan.FromSeconds(1);
 
             var parentContext = ExtractPropagationContext(result.Message.Headers);
             Baggage.Current = parentContext.Baggage;
@@ -242,8 +249,9 @@ public class Worker(
             var response = await client.PostAsJsonAsync(publishUrl, payload, cancellationToken);
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Failed to publish event {EventId} to realtime hub at {Url}", message.EventId, publishUrl);
             return false;
         }
     }
