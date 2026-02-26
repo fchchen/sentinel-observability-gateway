@@ -17,27 +17,27 @@ Enterprises don’t lack events—they lack a **reliable, observable control poi
 ## Screenshots (current build)
 The screenshots below were captured from a live local run with seeded traffic.
 
+### Angular dashboard
+
+![Angular dashboard](docs/screenshots/01-angular-dashboard.png)
+
 ### Query/API snapshots
 Pipeline health:
 
-![Pipeline health endpoint](docs/screenshots/01-pipeline-health.png)
+![Pipeline health endpoint](docs/screenshots/02-pipeline-health.png)
 
 Recent persisted events:
 
-![Recent events endpoint](docs/screenshots/02-recent-events.png)
-
-Gateway metrics endpoint:
-
-![Gateway metrics endpoint](docs/screenshots/04-gateway-metrics.png)
+![Recent events endpoint](docs/screenshots/03-recent-events.png)
 
 ### Observability snapshots
-Prometheus gateway request-rate query:
-
-![Prometheus gateway request rate](docs/screenshots/03-prometheus-gateway-rate.png)
-
 Grafana Sentinel Pipeline + SLO dashboard:
 
-![Grafana Sentinel Pipeline and SLO dashboard](docs/screenshots/05-grafana-dashboard.png)
+![Grafana Sentinel Pipeline and SLO dashboard](docs/screenshots/04-grafana-dashboard.png)
+
+Prometheus scrape targets (all UP):
+
+![Prometheus targets](docs/screenshots/05-prometheus-targets.png)
 
 ## Quick start
 1. Start infrastructure:
