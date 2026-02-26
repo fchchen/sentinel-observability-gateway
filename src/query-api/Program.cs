@@ -26,7 +26,8 @@ public class Program
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation()
-                .AddOtlpExporter(exporter => exporter.Endpoint = new Uri(otlpEndpoint)));
+                .AddOtlpExporter(exporter => exporter.Endpoint = new Uri(otlpEndpoint))
+                .AddPrometheusExporter());
 
         var app = builder.Build();
 
@@ -38,9 +39,7 @@ public class Program
 
         app.MapGet("/", () => Results.Ok(new { service = "query-api", status = "ok" }));
         app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "query-api" }));
-        app.MapGet("/metrics", () => Results.Text(
-            "# TYPE query_bootstrap_up gauge\nquery_bootstrap_up 1\n",
-            "text/plain; version=0.0.4"));
+        app.UseOpenTelemetryPrometheusScrapingEndpoint();
         app.MapGet("/v1/pipeline/health", async (QueryStore store, CancellationToken cancellationToken) =>
         {
             var snapshot = await store.GetPipelineHealthAsync(cancellationToken);

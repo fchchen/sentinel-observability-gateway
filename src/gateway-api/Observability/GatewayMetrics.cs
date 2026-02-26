@@ -11,7 +11,7 @@ public sealed class GatewayMetrics
     public GatewayMetrics()
     {
         _requestsTotal = GatewayTelemetry.Meter.CreateCounter<long>("gateway_requests_total");
-        _requestDurationMs = GatewayTelemetry.Meter.CreateHistogram<double>("gateway_request_duration_ms", unit: "ms");
+        _requestDurationMs = GatewayTelemetry.Meter.CreateHistogram<double>("gateway_request_duration_ms");
     }
 
     public void RecordRequest(int statusCode, double durationMs)

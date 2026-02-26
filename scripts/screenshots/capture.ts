@@ -203,9 +203,16 @@ async function capturePipelineHealth(page: Page) {
   await page.setContent(jsonToStyledHtml("Pipeline Health", data));
   await sleep(500);
 
+  // Clip to content to avoid large empty space below the JSON block
+  const body = page.locator("body");
+  const box = await body.boundingBox();
+  const preEl = page.locator("pre");
+  const preBox = await preEl.boundingBox();
+  const clipHeight = preBox ? preBox.y + preBox.height + 32 : box?.height ?? 800;
+
   await page.screenshot({
     path: path.join(OUTPUT_DIR, "02-pipeline-health.png"),
-    fullPage: false,
+    clip: { x: 0, y: 0, width: VIEWPORT.width, height: Math.min(clipHeight, VIEWPORT.height) },
   });
   log("  Saved 02-pipeline-health.png");
 }
@@ -272,45 +279,27 @@ async function captureGrafanaDashboard(page: Page) {
   log("  Saved 04-grafana-dashboard.png");
 }
 
-async function capturePrometheusGraph(page: Page) {
-  log("5/5 Capturing Prometheus rate graph...");
+async function capturePrometheusTargets(page: Page) {
+  log("5/5 Capturing Prometheus targets...");
 
-  await page.goto(`${PROMETHEUS_URL}/graph`, { waitUntil: "networkidle" });
+  await page.goto(`${PROMETHEUS_URL}/targets`, { waitUntil: "networkidle" });
 
-  // Type the query into the expression input
-  const exprInput = page.locator('textarea, input[id="expr"], .cm-content, input[name="expr"]').first();
-  await exprInput.waitFor({ timeout: 10_000 });
-  await exprInput.click();
-  await exprInput.fill("sum(rate(gateway_requests_total[5m]))");
-
-  // Click Execute
-  const executeBtn = page.locator('button:has-text("Execute")');
-  await executeBtn.click();
-
-  // Switch to Graph tab
+  // Wait for target table to render
   try {
-    const graphTab = page.locator('a:has-text("Graph"), button:has-text("Graph"), [role="tab"]:has-text("Graph")');
-    await graphTab.waitFor({ timeout: 5_000 });
-    await graphTab.click();
+    await page.waitForSelector('table, [class*="target"], a[href*="endpoint"]', {
+      timeout: 10_000,
+    });
   } catch {
-    log("  Warning: Graph tab not found, may already be active");
+    log("  Warning: targets table not found, capturing current state");
   }
 
-  // Wait for graph canvas/SVG to render
-  await sleep(3_000);
-  try {
-    await page.waitForSelector("canvas, svg.flot-base, .graph-panel", { timeout: 10_000 });
-  } catch {
-    log("  Warning: graph canvas not found, capturing current state");
-  }
-
-  await sleep(1_000);
+  await sleep(2_000);
 
   await page.screenshot({
-    path: path.join(OUTPUT_DIR, "05-prometheus-rate.png"),
+    path: path.join(OUTPUT_DIR, "05-prometheus-targets.png"),
     fullPage: false,
   });
-  log("  Saved 05-prometheus-rate.png");
+  log("  Saved 05-prometheus-targets.png");
 }
 
 // ── Main ─────────────────────────────────────────────────────────────
@@ -337,7 +326,7 @@ async function main() {
     await capturePipelineHealth(page);
     await captureRecentEvents(page);
     await captureGrafanaDashboard(page);
-    await capturePrometheusGraph(page);
+    await capturePrometheusTargets(page);
 
     log("All 5 screenshots captured successfully!");
     log(`Output: ${OUTPUT_DIR}`);

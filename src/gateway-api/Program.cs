@@ -61,7 +61,8 @@ public class Program
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation()
-                .AddOtlpExporter(exporter => exporter.Endpoint = new Uri(otlpEndpoint)));
+                .AddOtlpExporter(exporter => exporter.Endpoint = new Uri(otlpEndpoint))
+                .AddPrometheusExporter());
 
         var app = builder.Build();
 
@@ -82,9 +83,7 @@ public class Program
 
         app.MapGet("/", () => Results.Ok(new { service = "gateway-api", status = "ok" }));
         app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "gateway-api" }));
-        app.MapGet("/metrics", () => Results.Text(
-            "# TYPE gateway_bootstrap_up gauge\ngateway_bootstrap_up 1\n",
-            "text/plain; version=0.0.4"));
+        app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
         app.MapPost("/v1/events", async (
             HttpRequest request,

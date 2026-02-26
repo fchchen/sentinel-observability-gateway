@@ -37,16 +37,15 @@ public class Program
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation()
-                .AddOtlpExporter(exporter => exporter.Endpoint = new Uri(otlpEndpoint)));
+                .AddOtlpExporter(exporter => exporter.Endpoint = new Uri(otlpEndpoint))
+                .AddPrometheusExporter());
 
         var app = builder.Build();
         app.UseCors("local-dev");
 
         app.MapGet("/", () => Results.Ok(new { service = "realtime-hub", status = "ok" }));
         app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "realtime-hub" }));
-        app.MapGet("/metrics", () => Results.Text(
-            "# TYPE realtime_bootstrap_up gauge\nrealtime_bootstrap_up 1\n",
-            "text/plain; version=0.0.4"));
+        app.UseOpenTelemetryPrometheusScrapingEndpoint();
         app.MapPost("/v1/realtime/publish", async (
             RealtimePublishRequest payload,
             IHubContext<Hubs.EventStreamHub> hubContext,

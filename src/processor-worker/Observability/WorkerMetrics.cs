@@ -15,7 +15,7 @@ public sealed class WorkerMetrics
     {
         _processorEventsTotal = WorkerTelemetry.Meter.CreateCounter<long>("processor_events_total");
         _dlqEventsTotal = WorkerTelemetry.Meter.CreateCounter<long>("dlq_events_total");
-        _endToEndFreshnessSeconds = WorkerTelemetry.Meter.CreateHistogram<double>("end_to_end_freshness_seconds", unit: "s");
+        _endToEndFreshnessSeconds = WorkerTelemetry.Meter.CreateHistogram<double>("end_to_end_freshness_seconds");
         WorkerTelemetry.Meter.CreateObservableGauge(
             name: "processor_lag_seconds",
             observeValue: () => new Measurement<double>(Volatile.Read(ref _lastLagSeconds)));
