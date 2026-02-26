@@ -1,0 +1,25 @@
+# Build artifacts
+bin/
+obj/
+
+# IDE
+.idea/
+.vscode/
+*.user
+*.suo
+
+# Node
+node_modules/
+dist/
+
+# Local tooling and generated perf artifacts
+.tooling/
+docs/perf/runs/
+
+# Windows zone identifier sidecar files
+*.Zone.Identifier
+*:Zone.Identifier
+
+# OS clutter
+.DS_Store
+Thumbs.db

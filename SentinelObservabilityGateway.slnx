@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/gateway-api/">
+    <Project Path="src/gateway-api/Gateway.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/processor-worker/">
+    <Project Path="src/processor-worker/Processor.Worker.csproj" />
+  </Folder>
+  <Folder Name="/src/query-api/">
+    <Project Path="src/query-api/Query.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/realtime-hub/">
+    <Project Path="src/realtime-hub/Realtime.Hub.csproj" />
+  </Folder>
+</Solution>

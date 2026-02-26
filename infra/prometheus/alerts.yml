@@ -1,0 +1,53 @@
+groups:
+  - name: sentinel-slo-alerts
+    interval: 30s
+    rules:
+      - alert: GatewayIngestionBurnRateFast
+        expr: (sum(rate(gateway_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(gateway_requests_total[5m])), 1e-9)) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          slo: ingestion-availability
+        annotations:
+          summary: "Gateway ingestion burn rate is > 10x budget (5m)"
+          description: "5xx ratio exceeded 1% for 5 minutes. SLO objective is 99.9%."
+
+      - alert: GatewayIngestionBurnRateSlow
+        expr: (sum(rate(gateway_requests_total{status=~"5.."}[1h])) / clamp_min(sum(rate(gateway_requests_total[1h])), 1e-9)) > 0.002
+        for: 1h
+        labels:
+          severity: warning
+          slo: ingestion-availability
+        annotations:
+          summary: "Gateway ingestion burn rate is > 2x budget (1h)"
+          description: "5xx ratio exceeded 0.2% for 1 hour. SLO objective is 99.9%."
+
+      - alert: FreshnessP99High
+        expr: histogram_quantile(0.99, sum(rate(end_to_end_freshness_seconds_bucket[10m])) by (le)) > 20
+        for: 10m
+        labels:
+          severity: warning
+          slo: end-to-end-freshness
+        annotations:
+          summary: "End-to-end freshness p99 above 20s"
+          description: "Freshness p99 exceeded 20 seconds for 10 minutes."
+
+      - alert: ProcessorLagRising
+        expr: delta(processor_lag_seconds[15m]) > 10
+        for: 10m
+        labels:
+          severity: warning
+          service: processor-worker
+        annotations:
+          summary: "Processor lag is rising"
+          description: "Processor lag increased by more than 10 seconds over the last 15 minutes."
+
+      - alert: DlqGrowthDetected
+        expr: increase(dlq_events_total[10m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          service: processor-worker
+        annotations:
+          summary: "DLQ growth detected"
+          description: "New dead-letter events were recorded in the last 10 minutes."
